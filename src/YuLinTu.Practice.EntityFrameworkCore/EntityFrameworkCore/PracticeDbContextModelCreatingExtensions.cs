@@ -30,6 +30,8 @@ namespace YuLinTu.Practice.EntityFrameworkCore
                 b.ConfigureByConvention();
 
                 b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+
+                b.HasOne<Author>().WithMany().HasForeignKey(x => x.AuthorId).IsRequired();
             });
 
             builder.Entity<Author>(b =>
@@ -47,7 +49,7 @@ namespace YuLinTu.Practice.EntityFrameworkCore
                     .IsRequired()
                     .HasMaxLength(AuthorConsts.MaxNameLength);
 
-                b.HasIndex("FirstName", "LastName");
+                b.HasIndex("FirstName", "LastName").IsUnique();
             });
 
             // 将数据库字段全小写且通过下划线分隔

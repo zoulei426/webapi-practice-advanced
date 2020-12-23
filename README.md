@@ -223,9 +223,17 @@ public PracticeHttpApiHostMigrationsDbContext CreateDbContext(string[] args)
 
 ## 4 业务代码
 
+在本教程中，我们将在 Author 和 Book 实体之间建立 1 到 N 的关系，进一步实践 DDD 模式。
+
 ### 4.1 领域层
 
-按照上一教程创建 Book 实体与 BookType 枚举，接下来将创建 Author 实体，进一步实践 DDD 模式。
+按照上一教程创建 Book 实体与 BookType 枚举，并在 Book 类中添加：
+
+```c#
+public Guid AuthorId { get; set; }
+```
+
+- 为了遵循 DDD 最佳实践，建议仅通过 ID 引用其他聚合。
 
 
 在 YuLinTu.Practice.Domain 中创建 Author 实体：
@@ -242,7 +250,9 @@ namespace YuLinTu.Practice.Authors
     {
         #region Properties
 
-        public string Name { get; private set; }
+        public string FirstName { get; private set; }
+
+        public string LastName { get; private set; }
 
         public DateTime BirthDate { get; set; }
 
@@ -258,12 +268,13 @@ namespace YuLinTu.Practice.Authors
 
         internal Author(
             Guid id,
-            [NotNull] string name,
+            [NotNull] string firstName,
+            [NotNull] string lastName,
             DateTime birthDate,
             [CanBeNull] string shortBio = null)
             : base(id)
         {
-            SetName(name);
+            SetName(firstName, lastName);
             BirthDate = birthDate;
             ShortBio = shortBio;
         }
@@ -272,17 +283,23 @@ namespace YuLinTu.Practice.Authors
 
         #region Methods
 
-        internal Author ChangeName([NotNull] string name)
+        internal Author ChangeName([NotNull] string firstName, [NotNull] string lastName)
         {
-            SetName(name);
+            SetName(firstName, lastName);
             return this;
         }
 
-        private void SetName([NotNull] string name)
+        private void SetName([NotNull] string firstName, [NotNull] string lastName)
         {
-            Name = Check.NotNullOrWhiteSpace(
-               name,
-               nameof(name),
+            FirstName = Check.NotNullOrWhiteSpace(
+               firstName,
+               nameof(firstName),
+               maxLength: AuthorConsts.MaxNameLength
+           );
+
+            LastName = Check.NotNullOrWhiteSpace(
+               lastName,
+               nameof(lastName),
                maxLength: AuthorConsts.MaxNameLength
            );
         }
@@ -294,7 +311,7 @@ namespace YuLinTu.Practice.Authors
 
 - Author 继承自 FullAuditedAggregateRoot<Guid>，使实体软删除，且包含所有审计属性。
 - Author 的构造函数是 internal 的，所以它只能由领域层来创建。同时需要有一个 private / protected 的无参构造函数，满足从数据库读取对象时反序列化所需。
-- Name 属性的 setter 是私有的，将由 ChangeName 方法来维护。
+- FirstName, LastName 属性的 setter 是私有的，将由 ChangeName 方法来维护。
 - 更多内容请查阅[实体](https://docs.abp.io/zh-Hans/abp/latest/Entities)。
 
 在 YuLinTu.Practice.Domain.Shared 中创建常量 AuthorConsts：
@@ -321,7 +338,7 @@ namespace YuLinTu.Practice.Authors
 {
     public interface IAuthorRepository : IRepository<Author, Guid>
     {
-        Task<Author> FindByNameAsync(string name);
+        Task<Author> FindByNameAsync(string firstName, string lastName);
 
         Task<List<Author>> GetListAsync(
             int skipCount,
@@ -354,21 +371,23 @@ namespace YuLinTu.Practice.Authors
         }
 
         public async Task<Author> CreateAsync(
-            [NotNull] string name,
+            [NotNull] string firstName,
+            [NotNull] string lastName,
             DateTime birthDate,
             [CanBeNull] string shortBio = null)
         {
-            Check.NotNullOrWhiteSpace(name, nameof(name));
+            Check.NotNullOrWhiteSpace(firstName, nameof(firstName));
 
-            var existingAuthor = await authorRepository.FindByNameAsync(name);
+            var existingAuthor = await authorRepository.FindByNameAsync(firstName, lastName);
             if (existingAuthor != null)
             {
-                throw new AuthorAlreadyExistsException(name);
+                throw new AuthorAlreadyExistsException(firstName + lastName);
             }
 
             return new Author(
                 GuidGenerator.Create(),
-                name,
+                firstName,
+                lastName,
                 birthDate,
                 shortBio
             );
@@ -376,18 +395,20 @@ namespace YuLinTu.Practice.Authors
 
         public async Task ChangeNameAsync(
             [NotNull] Author author,
-            [NotNull] string newName)
+            [NotNull] string newFirstName,
+            [NotNull] string newLastName)
         {
             Check.NotNull(author, nameof(author));
-            Check.NotNullOrWhiteSpace(newName, nameof(newName));
+            Check.NotNullOrWhiteSpace(newFirstName, nameof(newFirstName));
+            Check.NotNullOrWhiteSpace(newLastName, nameof(newLastName));
 
-            var existingAuthor = await authorRepository.FindByNameAsync(newName);
+            var existingAuthor = await authorRepository.FindByNameAsync(newFirstName, newLastName);
             if (existingAuthor != null && existingAuthor.Id != author.Id)
             {
-                throw new AuthorAlreadyExistsException(newName);
+                throw new AuthorAlreadyExistsException(newFirstName + newLastName);
             }
 
-            author.ChangeName(newName);
+            author.ChangeName(newFirstName, newLastName);
         }
     }
 }
@@ -395,6 +416,7 @@ namespace YuLinTu.Practice.Authors
 
 - 域服务建议使用 Manager / Service 作为后缀。
 - 在构造函数中注入 IAuthorRepository 接口。
+- 域服务相对于应用层的服务而言，主要处理聚合的、单一的业务，而应用层的服务则相对是统筹的。
 
 在 YuLinTu.Practice.Domain 中创建业务异常 AuthorAlreadyExistsException：
 
@@ -479,6 +501,8 @@ namespace YuLinTu.Practice.EntityFrameworkCore
                 b.ConfigureByConvention();
 
                 b.Property(x => x.Name).IsRequired().HasMaxLength(128);
+
+                b.HasOne<Author>().WithMany().HasForeignKey(x => x.AuthorId).IsRequired();
             });
 
             builder.Entity<Author>(b =>
@@ -488,11 +512,15 @@ namespace YuLinTu.Practice.EntityFrameworkCore
 
                 b.ConfigureByConvention();
 
-                b.Property(x => x.Name)
+                b.Property(x => x.FirstName)
                     .IsRequired()
                     .HasMaxLength(AuthorConsts.MaxNameLength);
 
-                b.HasIndex(x => x.Name);
+                b.Property(x => x.LastName)
+                    .IsRequired()
+                    .HasMaxLength(AuthorConsts.MaxNameLength);
+
+                b.HasIndex("FirstName", "LastName").IsUnique();
             });
 
             // 将数据库字段全小写且通过下划线分隔
@@ -533,9 +561,11 @@ namespace YuLinTu.Practice.Authors
         {
         }
 
-        public async Task<Author> FindByNameAsync(string name)
+        public async Task<Author> FindByNameAsync(string firstName, string lastName)
         {
-            return await DbSet.FirstOrDefaultAsync(author => author.Name == name);
+            return await DbSet.FirstOrDefaultAsync(
+                author => author.FirstName == firstName
+                       && author.LastName == lastName);
         }
 
         public async Task<List<Author>> GetListAsync(
@@ -547,7 +577,8 @@ namespace YuLinTu.Practice.Authors
             return await DbSet
                 .WhereIf(
                     !filter.IsNullOrWhiteSpace(),
-                    author => author.Name.Contains(filter)
+                    author => author.FirstName.Contains(filter)
+                    || author.LastName.Contains(filter)
                  )
                 .OrderBy(sorting)
                 .Skip(skipCount)
@@ -558,12 +589,409 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
+修改 PracticeEntityFrameworkCoreModule.cs 文件：
+
+```c#
+using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.Modularity;
+
+namespace YuLinTu.Practice.EntityFrameworkCore
+{
+    [DependsOn(
+        typeof(PracticeDomainModule),
+        typeof(AbpEntityFrameworkCoreModule)
+    )]
+    public class PracticeEntityFrameworkCoreModule : AbpModule
+    {
+        public override void ConfigureServices(ServiceConfigurationContext context)
+        {
+            context.Services.AddAbpDbContext<PracticeDbContext>(options =>
+            {
+                // 添加缺省仓储
+                options.AddDefaultRepositories(includeAllEntities: true);
+            });
+        }
+    }
+}
+```
+
 - 更多内容请查阅 [EntityFrameworkCore](https://docs.abp.io/zh-Hans/abp/latest/Entity-Framework-Core)
 
 ### 4.3 应用层
 
-按照上一教程创建 BookDto, CreateUpdateBookDto, IBookAppService, BookAppService。
+创建 BookDto：
 
+```c#
+using System;
+using Volo.Abp.Application.Dtos;
+
+namespace YuLinTu.Practice.Books
+{
+    public class BookDto : AuditedEntityDto<Guid>
+    {
+        public Guid AuthorId { get; set; }
+
+        public string AuthorName { get; set; }
+
+        public string Name { get; set; }
+
+        public BookType Type { get; set; }
+
+        public DateTime PublishDate { get; set; }
+
+        public float Price { get; set; }
+    }
+}
+```
+
+创建 CreateUpdateBookDto：
+
+```c#
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace YuLinTu.Practice.Books
+{
+    public class CreateUpdateBookDto
+    {
+        [Required]
+        public Guid AuthorId { get; set; }
+
+        [Required]
+        [StringLength(128)]
+        public string Name { get; set; }
+
+        [Required]
+        public BookType Type { get; set; } = BookType.Undefined;
+
+        [Required]
+        [DataType(DataType.Date)]
+        public DateTime PublishDate { get; set; } = DateTime.Now;
+
+        [Required]
+        public float Price { get; set; }
+    }
+}
+```
+
+创建 IBookAppService：
+
+```c#
+using System;
+using Volo.Abp.Application.Dtos;
+using Volo.Abp.Application.Services;
+
+namespace YuLinTu.Practice.Books
+{
+    public interface IBookAppService :
+          ICrudAppService<
+              BookDto,
+              Guid,
+              PagedAndSortedResultRequestDto,
+              CreateUpdateBookDto>
+    {
+    }
+}
+```
+
+创建 BookAppService 实现 IBookAppService，并重写读取数据的方法：
+
+```c#
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Volo.Abp.Application.Dtos;
+using Volo.Abp.Application.Services;
+using Volo.Abp.Domain.Entities;
+using Volo.Abp.Domain.Repositories;
+using YuLinTu.Practice.Authors;
+
+namespace YuLinTu.Practice.Books
+{
+    public class BookAppService :
+         CrudAppService<
+             Book,
+             BookDto,
+             Guid,
+             PagedAndSortedResultRequestDto,
+             CreateUpdateBookDto>,
+         IBookAppService
+    {
+        private readonly IAuthorRepository authorRepository;
+
+        public BookAppService(IRepository<Book, Guid> repository, IAuthorRepository authorRepository)
+            : base(repository)
+        {
+            this.authorRepository = authorRepository;
+        }
+
+        public async override Task<BookDto> GetAsync(Guid id)
+        {
+            await CheckGetPolicyAsync();
+
+            var query = from book in Repository
+                        join author in authorRepository on book.AuthorId equals author.Id
+                        where book.Id == id
+                        select new { book, author };
+
+            // 获取 book 和 author
+            var queryResult = await AsyncExecuter.FirstOrDefaultAsync(query);
+            if (queryResult == null)
+            {
+                throw new EntityNotFoundException(typeof(Book), id);
+            }
+
+            var bookDto = ObjectMapper.Map<Book, BookDto>(queryResult.book);
+            bookDto.AuthorName = queryResult.author.FirstName + queryResult.author.LastName;
+            return bookDto;
+        }
+
+        public async override Task<PagedResultDto<BookDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+        {
+            await CheckGetListPolicyAsync();
+
+            var query = from book in Repository
+                        join author in authorRepository on book.AuthorId equals author.Id
+                        orderby input.Sorting
+                        select new { book, author };
+
+            query = query
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount);
+
+            var queryResult = await AsyncExecuter.ToListAsync(query);
+
+            var bookDtos = queryResult.Select(x =>
+            {
+                var bookDto = ObjectMapper.Map<Book, BookDto>(x.book);
+                bookDto.AuthorName = x.author.FirstName + x.author.LastName;
+                return bookDto;
+            }).ToList();
+
+            var totalCount = await Repository.GetCountAsync();
+
+            return new PagedResultDto<BookDto>(
+                totalCount,
+                bookDtos
+            );
+        }
+    }
+}
+```
+
+创建 AuthorDto：
+
+```c#
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Volo.Abp.Application.Dtos;
+
+namespace YuLinTu.Practice.Authors
+{
+    public class AuthorDto : EntityDto<Guid>
+    {
+        public string Name { get; set; }
+
+        public DateTime BirthDate { get; set; }
+
+        public int Age { get; set; }
+
+        public string ShortBio { get; set; }
+    }
+}
+```
+
+- 为了体验更多 AutoMapper 的配置，所以特意将 AuthorDto 的 Name 对应 Author 的 FirstName, LastName，并且 Age 将根据 BirthDate 计算。
+
+创建 CreateAuthorDto：
+
+```c#
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace YuLinTu.Practice.Authors
+{
+    public class CreateAuthorDto
+    {
+        [Required]
+        [StringLength(AuthorConsts.MaxNameLength)]
+        public string FirstName { get; set; }
+
+        [Required]
+        [StringLength(AuthorConsts.MaxNameLength)]
+        public string LastName { get; set; }
+
+        [Required]
+        public DateTime BirthDate { get; set; }
+
+        public string ShortBio { get; set; }
+    }
+}
+```
+
+创建 UpdateAuthorDto：
+
+```c#
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace YuLinTu.Practice.Authors
+{
+    public class UpdateAuthorDto
+    {
+        [Required]
+        [StringLength(AuthorConsts.MaxNameLength)]
+        public string FirstName { get; set; }
+
+        [Required]
+        [StringLength(AuthorConsts.MaxNameLength)]
+        public string LastName { get; set; }
+
+        [Required]
+        public DateTime BirthDate { get; set; }
+
+        public string ShortBio { get; set; }
+    }
+}
+```
+
+创建 GetAuthorListDto 继承自 PagedAndSortedResultRequestDto，并添加过滤字段 Filter：
+
+```c#
+using Volo.Abp.Application.Dtos;
+
+namespace YuLinTu.Practice.Authors
+{
+    public class GetAuthorListDto : PagedAndSortedResultRequestDto
+    {
+        public string Filter { get; set; }
+    }
+}
+```
+
+创建 IAuthorAppService：
+
+```c#
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Volo.Abp.Application.Dtos;
+using Volo.Abp.Application.Services;
+
+namespace YuLinTu.Practice.Authors
+{
+    public interface IAuthorAppService : IApplicationService
+    {
+        Task<AuthorDto> GetAsync(Guid id);
+
+        Task<PagedResultDto<AuthorDto>> GetListAsync(GetAuthorListDto input);
+
+        Task<AuthorDto> CreateAsync(CreateAuthorDto input);
+
+        Task UpdateAsync(Guid id, UpdateAuthorDto input);
+
+        Task DeleteAsync(Guid id);
+    }
+}
+```
+
+创建 AuthorAppService 实现 IAuthorAppService：
+
+```c#
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Volo.Abp.Application.Dtos;
+
+namespace YuLinTu.Practice.Authors
+{
+    public class AuthorAppService : PracticeAppService, IAuthorAppService
+    {
+        private readonly IAuthorRepository authorRepository;
+        private readonly AuthorManager authorManager;
+
+        public AuthorAppService(IAuthorRepository authorRepository, AuthorManager authorManager)
+        {
+            this.authorRepository = authorRepository;
+            this.authorManager = authorManager;
+        }
+
+        public async Task<AuthorDto> CreateAsync(CreateAuthorDto input)
+        {
+            var author = await authorManager.CreateAsync(
+                input.FirstName,
+                input.LastName,
+                input.BirthDate,
+                input.ShortBio);
+
+            await authorRepository.InsertAsync(author);
+
+            return ObjectMapper.Map<Author, AuthorDto>(author);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            await authorRepository.DeleteAsync(id);
+        }
+
+        public async Task<AuthorDto> GetAsync(Guid id)
+        {
+            var author = await authorRepository.GetAsync(id);
+            return ObjectMapper.Map<Author, AuthorDto>(author);
+        }
+
+        public async Task<PagedResultDto<AuthorDto>> GetListAsync(GetAuthorListDto input)
+        {
+            if (input.Sorting.IsNullOrWhiteSpace())
+            {
+                input.Sorting = nameof(Author.FirstName);
+            }
+
+            var authors = await authorRepository.GetListAsync(
+                input.SkipCount,
+                input.MaxResultCount,
+                input.Sorting,
+                input.Filter
+            );
+
+            var totalCount = await AsyncExecuter.CountAsync(
+                authorRepository.WhereIf(
+                    !input.Filter.IsNullOrWhiteSpace(),
+                    author => author.FirstName.Contains(input.Filter)
+                    || author.LastName.Contains(input.Filter)
+                )
+            );
+
+            return new PagedResultDto<AuthorDto>(
+                totalCount,
+                ObjectMapper.Map<List<Author>, List<AuthorDto>>(authors)
+            );
+        }
+
+        public async Task UpdateAsync(Guid id, UpdateAuthorDto input)
+        {
+            var author = await authorRepository.GetAsync(id);
+
+            if (author.FirstName != input.FirstName || author.LastName != input.LastName)
+            {
+                await authorManager.ChangeNameAsync(author, input.FirstName, input.LastName);
+            }
+
+            author.BirthDate = input.BirthDate;
+            author.ShortBio = input.ShortBio;
+
+            await authorRepository.UpdateAsync(author);
+        }
+    }
+}
+```
 
 
 ## 参考文献

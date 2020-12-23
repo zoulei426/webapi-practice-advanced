@@ -14,9 +14,8 @@ namespace YuLinTu.Practice.EntityFrameworkCore
         {
             context.Services.AddAbpDbContext<PracticeDbContext>(options =>
             {
-                /* Add custom repositories here. Example:
-                 * options.AddRepository<Question, EfCoreQuestionRepository>();
-                 */
+                // 添加缺省仓储
+                options.AddDefaultRepositories(includeAllEntities: true);
             });
         }
     }
