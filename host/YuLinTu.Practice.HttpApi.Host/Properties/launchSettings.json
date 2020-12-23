@@ -3,7 +3,7 @@
     "YuLinTu.Practice.DemoApp": {
       "commandName": "Project",
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:44340",
+      "applicationUrl": "http://localhost:44307",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

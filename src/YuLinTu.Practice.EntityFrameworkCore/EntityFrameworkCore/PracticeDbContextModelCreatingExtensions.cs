@@ -1,6 +1,9 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp;
+using Volo.Abp.EntityFrameworkCore.Modeling;
+using YuLinTu.Practice.Authors;
+using YuLinTu.Practice.Books;
 
 namespace YuLinTu.Practice.EntityFrameworkCore
 {
@@ -19,25 +22,42 @@ namespace YuLinTu.Practice.EntityFrameworkCore
 
             optionsAction?.Invoke(options);
 
-            /* Configure all entities here. Example:
-
-            builder.Entity<Question>(b =>
+            builder.Entity<Book>(b =>
             {
-                //Configure table & schema name
-                b.ToTable(options.TablePrefix + "Questions", options.Schema);
-            
-                b.ConfigureByConvention();
-            
-                //Properties
-                b.Property(q => q.Title).IsRequired().HasMaxLength(QuestionConsts.MaxTitleLength);
-                
-                //Relations
-                b.HasMany(question => question.Tags).WithOne().HasForeignKey(qt => qt.QuestionId);
+                b.ToTable(options.TablePrefix + "Books",
+                          options.Schema);
 
-                //Indexes
-                b.HasIndex(q => q.CreationTime);
+                b.ConfigureByConvention();
+
+                b.Property(x => x.Name).IsRequired().HasMaxLength(128);
             });
-            */
+
+            builder.Entity<Author>(b =>
+            {
+                b.ToTable(options.TablePrefix + "Authors",
+                    options.Schema);
+
+                b.ConfigureByConvention();
+
+                b.Property(x => x.FirstName)
+                    .IsRequired()
+                    .HasMaxLength(AuthorConsts.MaxNameLength);
+
+                b.Property(x => x.LastName)
+                    .IsRequired()
+                    .HasMaxLength(AuthorConsts.MaxNameLength);
+
+                b.HasIndex("FirstName", "LastName");
+            });
+
+            // 将数据库字段全小写且通过下划线分隔
+            foreach (var entity in builder.Model.GetEntityTypes())
+            {
+                foreach (var property in entity.GetProperties())
+                {
+                    property.SetColumnName(property.Name.ToSnakeCase());
+                }
+            }
         }
     }
 }

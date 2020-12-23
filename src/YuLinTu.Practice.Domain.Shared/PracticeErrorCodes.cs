@@ -2,6 +2,6 @@
 {
     public static class PracticeErrorCodes
     {
-        //Add your business exception error codes here...
+        public const string AuthorAlreadyExists = "Practice:00001";
     }
 }

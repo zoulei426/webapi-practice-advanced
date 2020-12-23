@@ -2,6 +2,7 @@
   "culture": "zh-Hans",
   "texts": {
     "ManageYourProfile": "管理个人资料",
-    "SamplePageMessage": "Practice模块的示例页面"
+    "SamplePageMessage": "Practice模块的示例页面",
+    "Practice:00001": "已存在相同姓名的作者：{name}"
   }
 }

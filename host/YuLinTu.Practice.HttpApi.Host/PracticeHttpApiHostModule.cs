@@ -33,6 +33,7 @@ using Volo.Abp.SettingManagement.EntityFrameworkCore;
 using Volo.Abp.Swashbuckle;
 using Volo.Abp.VirtualFileSystem;
 using Volo.Abp.EntityFrameworkCore.PostgreSql;
+using Volo.Abp.AspNetCore.Mvc;
 
 namespace YuLinTu.Practice
 {
@@ -146,6 +147,11 @@ namespace YuLinTu.Practice
                         .AllowAnyMethod()
                         .AllowCredentials();
                 });
+            });
+
+            Configure<AbpAspNetCoreMvcOptions>(options =>
+            {
+                options.ConventionalControllers.Create(typeof(PracticeApplicationModule).Assembly);
             });
         }
 
