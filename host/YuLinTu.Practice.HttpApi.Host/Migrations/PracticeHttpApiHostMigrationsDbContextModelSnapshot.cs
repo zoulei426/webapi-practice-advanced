@@ -90,7 +90,8 @@ namespace YuLinTu.Practice.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FirstName", "LastName");
+                    b.HasIndex("FirstName", "LastName")
+                        .IsUnique();
 
                     b.ToTable("PracticeAuthors");
                 });
@@ -101,6 +102,10 @@ namespace YuLinTu.Practice.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -148,7 +153,18 @@ namespace YuLinTu.Practice.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuthorId");
+
                     b.ToTable("PracticeBooks");
+                });
+
+            modelBuilder.Entity("YuLinTu.Practice.Books.Book", b =>
+                {
+                    b.HasOne("YuLinTu.Practice.Authors.Author", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

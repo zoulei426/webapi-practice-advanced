@@ -1,98 +1,108 @@
 <!--
- * @Description: »ùÓÚ ABP vNext µÄ Web API ½ø½×¿ª·¢½Ì³Ì
+ * @Description: åŸºäº ABP vNext çš„ Web API è¿›é˜¶å¼€å‘æ•™ç¨‹
  * @Author: zoulei
  * @Date: 2020-12-18 13:26:04
  * @LastEditors: zoulei
- * @LastEditTime: 2020-12-23 11:20:55
+ * @LastEditTime: 2020-12-24 09:51:14
 -->
 
-# »ùÓÚ ABP vNext µÄ Web API ½ø½×¿ª·¢½Ì³Ì
+# åŸºäº ABP vNext çš„ Web API è¿›é˜¶å¼€å‘æ•™ç¨‹
 
-## Ä¿Â¼
+## ç›®å½•
 
 <!-- TOC -->
 
-- [»ùÓÚ ABP vNext µÄ Web API ½ø½×¿ª·¢½Ì³Ì](#»ùÓÚ-abp-vnext-µÄ-web-api-½ø½×¿ª·¢½Ì³Ì)
-  - [Ä¿Â¼](#Ä¿Â¼)
-  - [1 ¸ÅÊö](#1-¸ÅÊö)
-  - [2 »·¾³](#2-»·¾³)
-    - [2.1 ÏÈ¾öÌõ¼ş](#21-ÏÈ¾öÌõ¼ş)
-    - [2.2 °²×° ABP CLI](#22-°²×°-abp-cli)
-    - [2.3 °²×° Redis](#23-°²×°-redis)
-  - [3 ¿ìËÙ´´½¨ÏîÄ¿](#3-¿ìËÙ´´½¨ÏîÄ¿)
-    - [3.1 ĞŞ¸Ä IdentityServer ÏîÄ¿](#31-ĞŞ¸Ä-identityserver-ÏîÄ¿)
-    - [3.2 ĞŞ¸Ä Api Host ÏîÄ¿](#32-ĞŞ¸Ä-api-host-ÏîÄ¿)
-  - [4 ÒµÎñ´úÂë](#4-ÒµÎñ´úÂë)
-    - [4.1 ÁìÓò²ã](#41-ÁìÓò²ã)
-    - [4.2 Êı¾İ¿â¼¯³É](#42-Êı¾İ¿â¼¯³É)
-    - [4.3 Ó¦ÓÃ²ã](#43-Ó¦ÓÃ²ã)
-  - [²Î¿¼ÎÄÏ×](#²Î¿¼ÎÄÏ×)
+- [åŸºäº ABP vNext çš„ Web API è¿›é˜¶å¼€å‘æ•™ç¨‹](#åŸºäº-abp-vnext-çš„-web-api-è¿›é˜¶å¼€å‘æ•™ç¨‹)
+  - [ç›®å½•](#ç›®å½•)
+  - [1 æ¦‚è¿°](#1-æ¦‚è¿°)
+  - [2 ç¯å¢ƒ](#2-ç¯å¢ƒ)
+    - [2.1 å…ˆå†³æ¡ä»¶](#21-å…ˆå†³æ¡ä»¶)
+    - [2.2 å®‰è£… ABP CLI](#22-å®‰è£…-abp-cli)
+    - [2.3 å®‰è£… Redis](#23-å®‰è£…-redis)
+  - [3 å¿«é€Ÿåˆ›å»ºé¡¹ç›®](#3-å¿«é€Ÿåˆ›å»ºé¡¹ç›®)
+    - [3.1 ä¿®æ”¹ IdentityServer é¡¹ç›®](#31-ä¿®æ”¹-identityserver-é¡¹ç›®)
+    - [3.2 ä¿®æ”¹ Api Host é¡¹ç›®](#32-ä¿®æ”¹-api-host-é¡¹ç›®)
+  - [4 ä¸šåŠ¡ä»£ç ](#4-ä¸šåŠ¡ä»£ç )
+    - [4.1 é¢†åŸŸå±‚](#41-é¢†åŸŸå±‚)
+    - [4.2 æ•°æ®åº“é›†æˆ](#42-æ•°æ®åº“é›†æˆ)
+    - [4.3 åº”ç”¨å±‚](#43-åº”ç”¨å±‚)
+    - [4.4 æ§åˆ¶å™¨å±‚](#44-æ§åˆ¶å™¨å±‚)
+  - [5 å“åº”ç»“æœå°è£…](#5-å“åº”ç»“æœå°è£…)
+  - [6 å‚æ•°éªŒè¯](#6-å‚æ•°éªŒè¯)
+  - [7 è®¤è¯ / æˆæƒ](#7-è®¤è¯--æˆæƒ)
+  - [8 ç¼“å­˜](#8-ç¼“å­˜)
+  - [9 REST](#9-rest)
+    - [9.1 URI / è·¯ç”±](#91-uri--è·¯ç”±)
+    - [9.2 HTTP åŠ¨è¯ / Action](#92-http-åŠ¨è¯--action)
+    - [9.3 åª’ä½“ç±»å‹ Media-Type](#93-åª’ä½“ç±»å‹-media-type)
+    - [9.4 HATEOAS](#94-hateoas)
+  - [å‚è€ƒæ–‡çŒ®](#å‚è€ƒæ–‡çŒ®)
 
 <!-- /TOC -->
 
-## 1 ¸ÅÊö
+## 1 æ¦‚è¿°
 
-±¾½Ì³Ì½éÉÜÊ¹ÓÃ ABP vNext ¹¹½¨ Web API µÄ½ø½×ÖªÊ¶£¬¸üÌù½üÏîÄ¿ÊµÕ½¡£
+æœ¬æ•™ç¨‹ä»‹ç»ä½¿ç”¨ ABP vNext æ„å»º Web API çš„è¿›é˜¶çŸ¥è¯†ï¼Œæ›´è´´è¿‘é¡¹ç›®å®æˆ˜ã€‚
 
-ÔÚ±¾½Ì³ÌÖĞ£¬Äã½«ÁË½â£º
-- Ê¹ÓÃ ABP CLI ¿ìËÙ´´½¨ Web API ÏîÄ¿
-- DDD ÁìÓòÇı¶¯Éè¼Æ
-- Ê¹ÓÃ IdentityServer4, AutoMapper...
+åœ¨æœ¬æ•™ç¨‹ä¸­ï¼Œä½ å°†äº†è§£ï¼š
+- ä½¿ç”¨ ABP CLI å¿«é€Ÿåˆ›å»º Web API é¡¹ç›®
+- DDD é¢†åŸŸé©±åŠ¨è®¾è®¡
+- ä½¿ç”¨ IdentityServer4, AutoMapper...
 
-Ë­ÊÊºÏÔÄ¶Á±¾½Ì³Ì£º
-- ÒÑÍê³É¡¶»ùÓÚ ABP vNext µÄ Web API ¿ª·¢½Ì³Ì¡·
+è°é€‚åˆé˜…è¯»æœ¬æ•™ç¨‹ï¼š
+- å·²å®Œæˆã€ŠåŸºäº ABP vNext çš„ Web API å¼€å‘æ•™ç¨‹ã€‹
 
-## 2 »·¾³
+## 2 ç¯å¢ƒ
 
-### 2.1 ÏÈ¾öÌõ¼ş
+### 2.1 å…ˆå†³æ¡ä»¶
 
-- .NET 5.0 SDK »ò¸ü¸ß°æ±¾
-- ¾ßÓĞ¡°ASP.NET ºÍ Web ¿ª·¢¡±¹¤×÷¸ºÔØµÄ Visual Studio 2019 16.8 »ò¸ü¸ß°æ±¾
-- API CLI 4.0 »ò¸ü¸ß°æ±¾
-- Postgresql 9.2 »ò¸ü¸ß°æ±¾
+- .NET 5.0 SDK æˆ–æ›´é«˜ç‰ˆæœ¬
+- å…·æœ‰â€œASP.NET å’Œ Web å¼€å‘â€å·¥ä½œè´Ÿè½½çš„ Visual Studio 2019 16.8 æˆ–æ›´é«˜ç‰ˆæœ¬
+- API CLI 4.0 æˆ–æ›´é«˜ç‰ˆæœ¬
+- Postgresql 9.2 æˆ–æ›´é«˜ç‰ˆæœ¬
 - Redis
 
-### 2.2 °²×° ABP CLI
+### 2.2 å®‰è£… ABP CLI
 
-°²×° ABP CLI
+å®‰è£… ABP CLI
 
 ```cmd
 dotnet tool install -g Volo.Abp.Cli
 ```
 
-»òÉı¼¶ÖÁ×îĞÂ°æ±¾¡£
+æˆ–å‡çº§è‡³æœ€æ–°ç‰ˆæœ¬ã€‚
 
 ```cmd
 dotnet tool update -g Volo.Abp.Cli
 ```
 
-### 2.3 °²×° Redis
+### 2.3 å®‰è£… Redis
 
-## 3 ¿ìËÙ´´½¨ÏîÄ¿
+## 3 å¿«é€Ÿåˆ›å»ºé¡¹ç›®
 
-Ê¹ÓÃABP CLIµÄ new ÃüÁî´´½¨ĞÂÏîÄ¿¡£
+ä½¿ç”¨ABP CLIçš„ new å‘½ä»¤åˆ›å»ºæ–°é¡¹ç›®ã€‚
 
 ```cmd
 abp new YuLinTu.Practice -t module --no-ui
 ```
 
-ÔËĞĞÒÔÉÏÃüÁîºó½«»á´´½¨Ò»¸öÄ£¿é»¯µÄ½â¾ö·½°¸½á¹¹£º
+è¿è¡Œä»¥ä¸Šå‘½ä»¤åå°†ä¼šåˆ›å»ºä¸€ä¸ªæ¨¡å—åŒ–çš„è§£å†³æ–¹æ¡ˆç»“æ„ï¼š
 
-- src ÎÄ¼ş¼Ğ°üº¬»ùÓÚDDDÔ­Ôò·Ö²ãµÄÊµ¼ÊÄ£¿é
-- test ÎÄ¼ş¼Ğ°üº¬µ¥ÔªºÍ¼¯³É²âÊÔ
-- host ÎÄ¼ş¼Ğ°üº¬¾ßÓĞ²»Í¬ÅäÖÃµÄÓ¦ÓÃ³ÌĞò£¬ÓÃÓÚÑİÊ¾ÔÚÓ¦ÓÃ³ÌĞòÖĞÈçºÎÍĞ¹ÜÄ£¿é¡£
+- src æ–‡ä»¶å¤¹åŒ…å«åŸºäºDDDåŸåˆ™åˆ†å±‚çš„å®é™…æ¨¡å—
+- test æ–‡ä»¶å¤¹åŒ…å«å•å…ƒå’Œé›†æˆæµ‹è¯•
+- host æ–‡ä»¶å¤¹åŒ…å«å…·æœ‰ä¸åŒé…ç½®çš„åº”ç”¨ç¨‹åºï¼Œç”¨äºæ¼”ç¤ºåœ¨åº”ç”¨ç¨‹åºä¸­å¦‚ä½•æ‰˜ç®¡æ¨¡å—ã€‚
 
-### 3.1 ĞŞ¸Ä IdentityServer ÏîÄ¿
+### 3.1 ä¿®æ”¹ IdentityServer é¡¹ç›®
 
-½« YuLinTu.Practice.IdentityServer ÉèÎªÆô¶¯Ïî£¬ÔÚ³ÌĞò°ü¹ÜÀí¿ØÖÆÌ¨Ñ¡Ôñ´ËÏîÄ¿ÎªÄ¬ÈÏÏîÄ¿¡£
+å°† YuLinTu.Practice.IdentityServer è®¾ä¸ºå¯åŠ¨é¡¹ï¼Œåœ¨ç¨‹åºåŒ…ç®¡ç†æ§åˆ¶å°é€‰æ‹©æ­¤é¡¹ç›®ä¸ºé»˜è®¤é¡¹ç›®ã€‚
 
-°²×° ABP ×é¼ş£º
+å®‰è£… ABP ç»„ä»¶ï¼š
 
 ```PM
 Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 ```
 
-ĞŞ¸Ä appsettings.json ÎÄ¼şÖĞµÄ ConnectionStrings ½Úµã£º
+ä¿®æ”¹ appsettings.json æ–‡ä»¶ä¸­çš„ ConnectionStrings èŠ‚ç‚¹ï¼š
 
 ```json
 "ConnectionStrings": {
@@ -100,7 +110,7 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
   }
 ```
 
-ĞŞ¸Ä Properties Ä¿Â¼ÏÂµÄ launchSettings.json ÎÄ¼ş£º
+ä¿®æ”¹ Properties ç›®å½•ä¸‹çš„ launchSettings.json æ–‡ä»¶ï¼š
 
 ```json
 {
@@ -117,10 +127,10 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 }
 ```
 
-ĞŞ¸Ä PracticeIdentityServerModule.cs ÎÄ¼ş£º
+ä¿®æ”¹ PracticeIdentityServerModule.cs æ–‡ä»¶ï¼š
 
-> ÔÚ DependsOn ÊôĞÔÖĞÌí¼Ó AbpEntityFrameworkCorePostgreSqlModule Ä£¿é¡£  
-> ĞŞ¸Ä ConfigureServices ·½·¨ÖĞµÄ AbpDbContextOptions ÅäÖÃ£º
+> åœ¨ DependsOn å±æ€§ä¸­æ·»åŠ  AbpEntityFrameworkCorePostgreSqlModule æ¨¡å—ã€‚  
+> ä¿®æ”¹ ConfigureServices æ–¹æ³•ä¸­çš„ AbpDbContextOptions é…ç½®ï¼š
 > ```c#
 > Configure<AbpDbContextOptions>(options =>
 > {
@@ -129,7 +139,7 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 > });
 > ```
 
-ĞŞ¸Ä EntityFrameworkCore Ä¿Â¼ÏÂµÄ IdentityServerHostMigrationsDbContextFactory.cs ÎÄ¼şÖĞµÄ CreateDbContext·½·¨£º
+ä¿®æ”¹ EntityFrameworkCore ç›®å½•ä¸‹çš„ IdentityServerHostMigrationsDbContextFactory.cs æ–‡ä»¶ä¸­çš„ CreateDbContextæ–¹æ³•ï¼š
 
 ```c#
 public IdentityServerHostMigrationsDbContext CreateDbContext(string[] args)
@@ -141,35 +151,35 @@ public IdentityServerHostMigrationsDbContext CreateDbContext(string[] args)
 }
 ```
 
-É¾³ı Migrations Ä¿Â¼¡£
+åˆ é™¤ Migrations ç›®å½•ã€‚
 
-ÔÚ³ÌĞò°ü¹ÜÀí¿ØÖÆÌ¨ÖĞÊäÈëÒÔÏÂÃüÁî´´½¨Êı¾İÇ¨ÒÆÎÄ¼ş£º
+åœ¨ç¨‹åºåŒ…ç®¡ç†æ§åˆ¶å°ä¸­è¾“å…¥ä»¥ä¸‹å‘½ä»¤åˆ›å»ºæ•°æ®è¿ç§»æ–‡ä»¶ï¼š
 
 ```cmd
 Add-Migration "Init"
 ```
 
-ÔÙÊäÈëÒÔÏÂÃüÁî¸üĞÂÊı¾İ¿â£º
+å†è¾“å…¥ä»¥ä¸‹å‘½ä»¤æ›´æ–°æ•°æ®åº“ï¼š
 
 ```cmd
 Update-Database
 ```
 
-ÔËĞĞ Redis¡£
+è¿è¡Œ Redisã€‚
 
-ÔÚÏîÄ¿¸ùÂ·¾¶ÏÂÊ¹ÓÃ dotnet run Æô¶¯ÏîÄ¿¡£
+åœ¨é¡¹ç›®æ ¹è·¯å¾„ä¸‹ä½¿ç”¨ dotnet run å¯åŠ¨é¡¹ç›®ã€‚
 
-### 3.2 ĞŞ¸Ä Api Host ÏîÄ¿
+### 3.2 ä¿®æ”¹ Api Host é¡¹ç›®
 
-½« YuLinTu.Practice.HttpApi.Host ÉèÎªÆô¶¯Ïî£¬ÔÚ³ÌĞò°ü¹ÜÀí¿ØÖÆÌ¨Ñ¡Ôñ´ËÏîÄ¿ÎªÄ¬ÈÏÏîÄ¿¡£
+å°† YuLinTu.Practice.HttpApi.Host è®¾ä¸ºå¯åŠ¨é¡¹ï¼Œåœ¨ç¨‹åºåŒ…ç®¡ç†æ§åˆ¶å°é€‰æ‹©æ­¤é¡¹ç›®ä¸ºé»˜è®¤é¡¹ç›®ã€‚
 
-°²×° ABP ×é¼ş£º
+å®‰è£… ABP ç»„ä»¶ï¼š
 
 ```PM
 Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 ```
 
-ĞŞ¸Ä appsettings.json ÎÄ¼şÖĞµÄ ConnectionStrings ½Úµã£º
+ä¿®æ”¹ appsettings.json æ–‡ä»¶ä¸­çš„ ConnectionStrings èŠ‚ç‚¹ï¼š
 
 ```json
 "ConnectionStrings": {
@@ -178,7 +188,7 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
   }
 ```
 
-ĞŞ¸Ä Properties Ä¿Â¼ÏÂµÄ launchSettings.json ÎÄ¼ş£º
+ä¿®æ”¹ Properties ç›®å½•ä¸‹çš„ launchSettings.json æ–‡ä»¶ï¼š
 
 ```json
 {
@@ -195,10 +205,10 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 }
 ```
 
-ĞŞ¸Ä PracticeHttpApiHostModule.cs ÎÄ¼ş£º
+ä¿®æ”¹ PracticeHttpApiHostModule.cs æ–‡ä»¶ï¼š
 
-> ÔÚ DependsOn ÊôĞÔÖĞÌí¼Ó AbpEntityFrameworkCorePostgreSqlModule Ä£¿é¡£  
-> ĞŞ¸Ä ConfigureServices ·½·¨ÖĞµÄ AbpDbContextOptions ÅäÖÃ£º
+> åœ¨ DependsOn å±æ€§ä¸­æ·»åŠ  AbpEntityFrameworkCorePostgreSqlModule æ¨¡å—ã€‚  
+> ä¿®æ”¹ ConfigureServices æ–¹æ³•ä¸­çš„ AbpDbContextOptions é…ç½®ï¼š
 > ```c#
 > Configure<AbpDbContextOptions>(options =>
 > {
@@ -207,7 +217,7 @@ Install-Package Volo.Abp.EntityFrameworkCore.PostgreSql
 > });
 > ```
 
-ĞŞ¸Ä EntityFrameworkCore Ä¿Â¼ÏÂµÄ IdentityServerHostMigrationsDbContextFactory.cs ÎÄ¼şÖĞµÄ CreateDbContext·½·¨£º
+ä¿®æ”¹ EntityFrameworkCore ç›®å½•ä¸‹çš„ IdentityServerHostMigrationsDbContextFactory.cs æ–‡ä»¶ä¸­çš„ CreateDbContextæ–¹æ³•ï¼š
 
 ```c#
 public PracticeHttpApiHostMigrationsDbContext CreateDbContext(string[] args)
@@ -219,24 +229,24 @@ public PracticeHttpApiHostMigrationsDbContext CreateDbContext(string[] args)
 }
 ```
 
-ÔËĞĞ´ËÏîÄ¿¡£
+è¿è¡Œæ­¤é¡¹ç›®ã€‚
 
-## 4 ÒµÎñ´úÂë
+## 4 ä¸šåŠ¡ä»£ç 
 
-ÔÚ±¾½Ì³ÌÖĞ£¬ÎÒÃÇ½«ÔÚ Author ºÍ Book ÊµÌåÖ®¼ä½¨Á¢ 1 µ½ N µÄ¹ØÏµ£¬½øÒ»²½Êµ¼ù DDD Ä£Ê½¡£
+åœ¨æœ¬æ•™ç¨‹ä¸­ï¼Œæˆ‘ä»¬å°†åœ¨ Author å’Œ Book å®ä½“ä¹‹é—´å»ºç«‹ 1 åˆ° N çš„å…³ç³»ï¼Œè¿›ä¸€æ­¥å®è·µ DDD æ¨¡å¼ã€‚
 
-### 4.1 ÁìÓò²ã
+### 4.1 é¢†åŸŸå±‚
 
-°´ÕÕÉÏÒ»½Ì³Ì´´½¨ Book ÊµÌåÓë BookType Ã¶¾Ù£¬²¢ÔÚ Book ÀàÖĞÌí¼Ó£º
+æŒ‰ç…§ä¸Šä¸€æ•™ç¨‹åˆ›å»º Book å®ä½“ä¸ BookType æšä¸¾ï¼Œå¹¶åœ¨ Book ç±»ä¸­æ·»åŠ ï¼š
 
 ```c#
 public Guid AuthorId { get; set; }
 ```
 
-- ÎªÁË×ñÑ­ DDD ×î¼ÑÊµ¼ù£¬½¨Òé½öÍ¨¹ı ID ÒıÓÃÆäËû¾ÛºÏ¡£
+- ä¸ºäº†éµå¾ª DDD æœ€ä½³å®è·µï¼Œå»ºè®®ä»…é€šè¿‡ ID å¼•ç”¨å…¶ä»–èšåˆã€‚
 
 
-ÔÚ YuLinTu.Practice.Domain ÖĞ´´½¨ Author ÊµÌå£º
+åœ¨ YuLinTu.Practice.Domain ä¸­åˆ›å»º Author å®ä½“ï¼š
 
 ```c#
 using JetBrains.Annotations;
@@ -309,12 +319,12 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-- Author ¼Ì³Ğ×Ô FullAuditedAggregateRoot<Guid>£¬Ê¹ÊµÌåÈíÉ¾³ı£¬ÇÒ°üº¬ËùÓĞÉó¼ÆÊôĞÔ¡£
-- Author µÄ¹¹Ôìº¯ÊıÊÇ internal µÄ£¬ËùÒÔËüÖ»ÄÜÓÉÁìÓò²ãÀ´´´½¨¡£Í¬Ê±ĞèÒªÓĞÒ»¸ö private / protected µÄÎŞ²Î¹¹Ôìº¯Êı£¬Âú×ã´ÓÊı¾İ¿â¶ÁÈ¡¶ÔÏóÊ±·´ĞòÁĞ»¯ËùĞè¡£
-- FirstName, LastName ÊôĞÔµÄ setter ÊÇË½ÓĞµÄ£¬½«ÓÉ ChangeName ·½·¨À´Î¬»¤¡£
-- ¸ü¶àÄÚÈİÇë²éÔÄ[ÊµÌå](https://docs.abp.io/zh-Hans/abp/latest/Entities)¡£
+- Author ç»§æ‰¿è‡ª FullAuditedAggregateRoot<Guid>ï¼Œä½¿å®ä½“è½¯åˆ é™¤ï¼Œä¸”åŒ…å«æ‰€æœ‰å®¡è®¡å±æ€§ã€‚
+- Author çš„æ„é€ å‡½æ•°æ˜¯ internal çš„ï¼Œæ‰€ä»¥å®ƒåªèƒ½ç”±é¢†åŸŸå±‚æ¥åˆ›å»ºã€‚åŒæ—¶éœ€è¦æœ‰ä¸€ä¸ª private / protected çš„æ— å‚æ„é€ å‡½æ•°ï¼Œæ»¡è¶³ä»æ•°æ®åº“è¯»å–å¯¹è±¡æ—¶ååºåˆ—åŒ–æ‰€éœ€ã€‚
+- FirstName, LastName å±æ€§çš„ setter æ˜¯ç§æœ‰çš„ï¼Œå°†ç”± ChangeName æ–¹æ³•æ¥ç»´æŠ¤ã€‚
+- æ›´å¤šå†…å®¹è¯·æŸ¥é˜…[å®ä½“](https://docs.abp.io/zh-Hans/abp/latest/Entities)ã€‚
 
-ÔÚ YuLinTu.Practice.Domain.Shared ÖĞ´´½¨³£Á¿ AuthorConsts£º
+åœ¨ YuLinTu.Practice.Domain.Shared ä¸­åˆ›å»ºå¸¸é‡ AuthorConstsï¼š
 
 ```c#
 namespace YuLinTu.Practice.Authors
@@ -326,7 +336,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-ÔÚ YuLinTu.Practice.Domain ÖĞ´´½¨²Ö´¢½Ó¿Ú IAuthorRepository£º
+åœ¨ YuLinTu.Practice.Domain ä¸­åˆ›å»ºä»“å‚¨æ¥å£ IAuthorRepositoryï¼š
 
 ```c#
 using System;
@@ -350,7 +360,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-ÔÚ YuLinTu.Practice.Domain ÖĞ´´½¨Óò·şÎñ AuthorManager£º
+åœ¨ YuLinTu.Practice.Domain ä¸­åˆ›å»ºåŸŸæœåŠ¡ AuthorManagerï¼š
 
 ```c#
 using JetBrains.Annotations;
@@ -414,11 +424,11 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-- Óò·şÎñ½¨ÒéÊ¹ÓÃ Manager / Service ×÷Îªºó×º¡£
-- ÔÚ¹¹Ôìº¯ÊıÖĞ×¢Èë IAuthorRepository ½Ó¿Ú¡£
-- Óò·şÎñÏà¶ÔÓÚÓ¦ÓÃ²ãµÄ·şÎñ¶øÑÔ£¬Ö÷Òª´¦Àí¾ÛºÏµÄ¡¢µ¥Ò»µÄÒµÎñ£¬¶øÓ¦ÓÃ²ãµÄ·şÎñÔòÏà¶ÔÊÇÍ³³ïµÄ¡£
+- åŸŸæœåŠ¡å»ºè®®ä½¿ç”¨ Manager / Service ä½œä¸ºåç¼€ã€‚
+- åœ¨æ„é€ å‡½æ•°ä¸­æ³¨å…¥ IAuthorRepository æ¥å£ã€‚
+- åŸŸæœåŠ¡ç›¸å¯¹äºåº”ç”¨å±‚çš„æœåŠ¡è€Œè¨€ï¼Œä¸»è¦å¤„ç†èšåˆçš„ã€å•ä¸€çš„ä¸šåŠ¡ï¼Œè€Œåº”ç”¨å±‚çš„æœåŠ¡åˆ™ç›¸å¯¹æ˜¯ç»Ÿç­¹çš„ã€‚
 
-ÔÚ YuLinTu.Practice.Domain ÖĞ´´½¨ÒµÎñÒì³£ AuthorAlreadyExistsException£º
+åœ¨ YuLinTu.Practice.Domain ä¸­åˆ›å»ºä¸šåŠ¡å¼‚å¸¸ AuthorAlreadyExistsExceptionï¼š
 
 ```c#
 using Volo.Abp;
@@ -436,9 +446,9 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-- AuthorAlreadyExistsException ¼Ì³Ğ×Ô BusinessException£¬BusinessException ÓÃÓÚÒı·¢ÒµÎñÏà¹ØÒì³££¬¿ÉÒÔ¸üÈİÒ×µØÊµÏÖ±¾µØ»¯ĞèÇó¡£
+- AuthorAlreadyExistsException ç»§æ‰¿è‡ª BusinessExceptionï¼ŒBusinessException ç”¨äºå¼•å‘ä¸šåŠ¡ç›¸å…³å¼‚å¸¸ï¼Œå¯ä»¥æ›´å®¹æ˜“åœ°å®ç°æœ¬åœ°åŒ–éœ€æ±‚ã€‚
 
-ĞŞ¸Ä YuLinTu.Practice.Domain.Shared ÖĞµÄ PracticeErrorCodes.cs ÎÄ¼ş£º
+ä¿®æ”¹ YuLinTu.Practice.Domain.Shared ä¸­çš„ PracticeErrorCodes.cs æ–‡ä»¶ï¼š
 
 ```c#
 namespace YuLinTu.Practice
@@ -450,15 +460,15 @@ namespace YuLinTu.Practice
 }
 ```
 
-´ò¿ª YuLinTu.Practice.Domain.Shared ÏîÄ¿ÖĞµÄ Localization/Practice/zh-Hans.json ÎÄ¼ş£¬²¢Ìí¼Ó£º
+æ‰“å¼€ YuLinTu.Practice.Domain.Shared é¡¹ç›®ä¸­çš„ Localization/Practice/zh-Hans.json æ–‡ä»¶ï¼Œå¹¶æ·»åŠ ï¼š
 
 ```json
-"Practice:00001": "ÒÑ´æÔÚÏàÍ¬ĞÕÃûµÄ×÷Õß£º{name}"
+"Practice:00001": "å·²å­˜åœ¨ç›¸åŒå§“åçš„ä½œè€…ï¼š{name}"
 ```
 
-### 4.2 Êı¾İ¿â¼¯³É
+### 4.2 æ•°æ®åº“é›†æˆ
 
-´ò¿ª YuLinTu.Practice.EntityFrameworkCore ÏîÄ¿ÖĞµÄ PracticeDbContext.cs ÎÄ¼ş£¬²¢Ìí¼Ó Book Óë Author Êı¾İ¼¯£º
+æ‰“å¼€ YuLinTu.Practice.EntityFrameworkCore é¡¹ç›®ä¸­çš„ PracticeDbContext.cs æ–‡ä»¶ï¼Œå¹¶æ·»åŠ  Book ä¸ Author æ•°æ®é›†ï¼š
 
 ```c#
 public DbSet<Book> Books { get; set; }
@@ -466,7 +476,7 @@ public DbSet<Book> Books { get; set; }
 public DbSet<Author> Authors { get; set; }
 ```
 
-´ò¿ª PracticeDbContextModelCreatingExtensions.cs ÎÄ¼ş£¬Ìí¼Ó Book Óë Author µÄÊı¾İ¿âÓ³Éä£º
+æ‰“å¼€ PracticeDbContextModelCreatingExtensions.cs æ–‡ä»¶ï¼Œæ·»åŠ  Book ä¸ Author çš„æ•°æ®åº“æ˜ å°„ï¼š
 
 ```c#
 using System;
@@ -523,7 +533,7 @@ namespace YuLinTu.Practice.EntityFrameworkCore
                 b.HasIndex("FirstName", "LastName").IsUnique();
             });
 
-            // ½«Êı¾İ¿â×Ö¶ÎÈ«Ğ¡Ğ´ÇÒÍ¨¹ıÏÂ»®Ïß·Ö¸ô
+            // å°†æ•°æ®åº“å­—æ®µå…¨å°å†™ä¸”é€šè¿‡ä¸‹åˆ’çº¿åˆ†éš”
             foreach (var entity in builder.Model.GetEntityTypes())
             {
                 foreach (var property in entity.GetProperties())
@@ -536,7 +546,7 @@ namespace YuLinTu.Practice.EntityFrameworkCore
 }
 ```
 
-´´½¨ IAuthorRepository µÄÊµÏÖÀà EfCoreAuthorRepository£º
+åˆ›å»º IAuthorRepository çš„å®ç°ç±» EfCoreAuthorRepositoryï¼š
 
 ```c#
 using System;
@@ -589,7 +599,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-ĞŞ¸Ä PracticeEntityFrameworkCoreModule.cs ÎÄ¼ş£º
+ä¿®æ”¹ PracticeEntityFrameworkCoreModule.cs æ–‡ä»¶ï¼š
 
 ```c#
 using Microsoft.Extensions.DependencyInjection;
@@ -608,7 +618,7 @@ namespace YuLinTu.Practice.EntityFrameworkCore
         {
             context.Services.AddAbpDbContext<PracticeDbContext>(options =>
             {
-                // Ìí¼ÓÈ±Ê¡²Ö´¢
+                // æ·»åŠ ç¼ºçœä»“å‚¨
                 options.AddDefaultRepositories(includeAllEntities: true);
             });
         }
@@ -616,11 +626,25 @@ namespace YuLinTu.Practice.EntityFrameworkCore
 }
 ```
 
-- ¸ü¶àÄÚÈİÇë²éÔÄ [EntityFrameworkCore](https://docs.abp.io/zh-Hans/abp/latest/Entity-Framework-Core)
+- æ›´å¤šå†…å®¹è¯·æŸ¥é˜… [EntityFrameworkCore](https://docs.abp.io/zh-Hans/abp/latest/Entity-Framework-Core)
 
-### 4.3 Ó¦ÓÃ²ã
+å°† YuLinTu.Practice.HttpApi.Host è®¾ä¸ºå¯åŠ¨é¡¹ï¼Œåœ¨ç¨‹åºåŒ…ç®¡ç†æ§åˆ¶å°é€‰æ‹©æ­¤é¡¹ç›®ä¸ºé»˜è®¤é¡¹ç›®ã€‚
 
-´´½¨ BookDto£º
+åœ¨ç¨‹åºåŒ…ç®¡ç†æ§åˆ¶å°ä¸­è¾“å…¥ä»¥ä¸‹å‘½ä»¤åˆ›å»ºæ•°æ®è¿ç§»æ–‡ä»¶ï¼š
+
+```cmd
+Add-Migration "Init"
+```
+
+å†è¾“å…¥ä»¥ä¸‹å‘½ä»¤æ›´æ–°æ•°æ®åº“ï¼š
+
+```cmd
+Update-Database
+```
+
+### 4.3 åº”ç”¨å±‚
+
+åˆ›å»º BookDtoï¼š
 
 ```c#
 using System;
@@ -645,7 +669,7 @@ namespace YuLinTu.Practice.Books
 }
 ```
 
-´´½¨ CreateUpdateBookDto£º
+åˆ›å»º CreateUpdateBookDtoï¼š
 
 ```c#
 using System;
@@ -675,7 +699,7 @@ namespace YuLinTu.Practice.Books
 }
 ```
 
-´´½¨ IBookAppService£º
+åˆ›å»º IBookAppServiceï¼š
 
 ```c#
 using System;
@@ -695,7 +719,7 @@ namespace YuLinTu.Practice.Books
 }
 ```
 
-´´½¨ BookAppService ÊµÏÖ IBookAppService£¬²¢ÖØĞ´¶ÁÈ¡Êı¾İµÄ·½·¨£º
+åˆ›å»º BookAppService å®ç° IBookAppServiceï¼Œå¹¶é‡å†™è¯»å–æ•°æ®çš„æ–¹æ³•ï¼š
 
 ```c#
 using System;
@@ -737,7 +761,7 @@ namespace YuLinTu.Practice.Books
                         where book.Id == id
                         select new { book, author };
 
-            // »ñÈ¡ book ºÍ author
+            // è·å– book å’Œ author
             var queryResult = await AsyncExecuter.FirstOrDefaultAsync(query);
             if (queryResult == null)
             {
@@ -782,7 +806,7 @@ namespace YuLinTu.Practice.Books
 }
 ```
 
-´´½¨ AuthorDto£º
+åˆ›å»º AuthorDtoï¼š
 
 ```c#
 using System;
@@ -805,9 +829,9 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-- ÎªÁËÌåÑé¸ü¶à AutoMapper µÄÅäÖÃ£¬ËùÒÔÌØÒâ½« AuthorDto µÄ Name ¶ÔÓ¦ Author µÄ FirstName, LastName£¬²¢ÇÒ Age ½«¸ù¾İ BirthDate ¼ÆËã¡£
+- ä¸ºäº†ä½“éªŒæ›´å¤š AutoMapper çš„é…ç½®ï¼Œæ‰€ä»¥ç‰¹æ„å°† AuthorDto çš„ Name å¯¹åº” Author çš„ FirstName, LastNameï¼Œå¹¶ä¸” Age å°†æ ¹æ® BirthDate è®¡ç®—ã€‚
 
-´´½¨ CreateAuthorDto£º
+åˆ›å»º CreateAuthorDtoï¼š
 
 ```c#
 using System;
@@ -833,7 +857,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-´´½¨ UpdateAuthorDto£º
+åˆ›å»º UpdateAuthorDtoï¼š
 
 ```c#
 using System;
@@ -859,7 +883,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-´´½¨ GetAuthorListDto ¼Ì³Ğ×Ô PagedAndSortedResultRequestDto£¬²¢Ìí¼Ó¹ıÂË×Ö¶Î Filter£º
+åˆ›å»º GetAuthorListDto ç»§æ‰¿è‡ª PagedAndSortedResultRequestDtoï¼Œå¹¶æ·»åŠ è¿‡æ»¤å­—æ®µ Filterï¼š
 
 ```c#
 using Volo.Abp.Application.Dtos;
@@ -873,7 +897,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-´´½¨ IAuthorAppService£º
+åˆ›å»º IAuthorAppServiceï¼š
 
 ```c#
 using System;
@@ -900,7 +924,7 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
-´´½¨ AuthorAppService ÊµÏÖ IAuthorAppService£º
+åˆ›å»º AuthorAppService å®ç° IAuthorAppServiceï¼š
 
 ```c#
 using System;
@@ -993,8 +1017,70 @@ namespace YuLinTu.Practice.Authors
 }
 ```
 
+ä¿®æ”¹ PracticeApplicationAutoMapperProfile.cs æ–‡ä»¶é…ç½®å®ä½“ä¸ DTO çš„æ˜ å°„ï¼š
 
-## ²Î¿¼ÎÄÏ×
+```c#
+using AutoMapper;
+using System;
+using System.Linq;
+using YuLinTu.Practice.Authors;
+using YuLinTu.Practice.Books;
+
+namespace YuLinTu.Practice
+{
+    public class PracticeApplicationAutoMapperProfile : Profile
+    {
+        public PracticeApplicationAutoMapperProfile()
+        {
+            CreateMap<Book, BookDto>();
+            CreateMap<CreateUpdateBookDto, Book>();
+
+            CreateMap<Author, AuthorDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName}{src.LastName}"))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => (DateTime.Now - src.BirthDate).Days / 365));
+
+            CreateMap<CreateAuthorDto, Author>();
+            CreateMap<UpdateAuthorDto, Author>();
+
+            ForAllMaps((typeMap, mappingExpr) =>
+            {
+                // å¿½ç•¥æœªæ˜ å°„çš„æ˜ å°„
+                foreach (var dest in typeMap.DestinationTypeDetails.PublicReadAccessors)
+                {
+                    if (!typeMap.PropertyMaps.Any(t => t.DestinationName.Equals(dest.Name)))
+                    {
+                        mappingExpr.ForMember(dest.Name, opt => opt.Ignore());
+                    }
+                }
+            });
+        }
+    }
+}
+```
+
+ç”±äº ABP æ¡†æ¶é»˜è®¤é…ç½®äº†ä»åº”ç”¨æœåŠ¡è‡ªåŠ¨ç”Ÿæˆ APIï¼Œæ­¤æ—¶å·²ç»å¯ä»¥å¯åŠ¨ YuLinTu.Practice.HttpApi.Host é¡¹ç›®ï¼Œåœ¨ Swagger æŸ¥çœ‹åˆ° Author ä¸ Book æ¥å£ã€‚
+
+### 4.4 æ§åˆ¶å™¨å±‚
+
+## 5 å“åº”ç»“æœå°è£…
+
+## 6 å‚æ•°éªŒè¯
+
+## 7 è®¤è¯ / æˆæƒ
+
+## 8 ç¼“å­˜
+
+## 9 REST
+
+### 9.1 URI / è·¯ç”±
+
+### 9.2 HTTP åŠ¨è¯ / Action
+
+### 9.3 åª’ä½“ç±»å‹ Media-Type
+
+### 9.4 HATEOAS
+
+## å‚è€ƒæ–‡çŒ®
 
 - [Mircrosoft Docs](https://docs.microsoft.com/zh-cn/aspnet/core/web-api/?view=aspnetcore-5.0)
 - [ABP Framework Docs](https://docs.abp.io/zh-Hans/abp/latest/Getting-Started?UI=MVC&DB=EF&Tiered=No)

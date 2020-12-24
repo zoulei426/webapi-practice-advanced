@@ -36,6 +36,7 @@ namespace YuLinTu.Practice.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
+                    author_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     type = table.Column<int>(type: "integer", nullable: false),
                     publish_date = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
@@ -50,21 +51,33 @@ namespace YuLinTu.Practice.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PracticeBooks", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_PracticeBooks_PracticeAuthors_author_id",
+                        column: x => x.author_id,
+                        principalTable: "PracticeAuthors",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PracticeAuthors_first_name_last_name",
                 table: "PracticeAuthors",
-                columns: new[] { "first_name", "last_name" });
+                columns: new[] { "first_name", "last_name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PracticeBooks_author_id",
+                table: "PracticeBooks",
+                column: "author_id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "PracticeAuthors");
+                name: "PracticeBooks");
 
             migrationBuilder.DropTable(
-                name: "PracticeBooks");
+                name: "PracticeAuthors");
         }
     }
 }
