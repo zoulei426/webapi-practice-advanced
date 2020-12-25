@@ -63,6 +63,11 @@ namespace YuLinTu.Practice.Authors
            );
         }
 
+        public string GetFullName()
+        {
+            return FirstName + LastName;
+        }
+
         #endregion Methods
     }
 }

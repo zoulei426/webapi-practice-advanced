@@ -28,55 +28,51 @@ namespace YuLinTu.Practice.Books
             this.authorRepository = authorRepository;
         }
 
-        public async override Task<BookDto> GetAsync(Guid id)
+        public async Task<BookDto> CreateBookForAuthorAsync(Guid authorId, CreateUpdateBookDto book)
         {
-            await CheckGetPolicyAsync();
-
-            var query = from book in Repository
-                        join author in authorRepository on book.AuthorId equals author.Id
-                        where book.Id == id
-                        select new { book, author };
-
-            // 获取 book 和 author
-            var queryResult = await AsyncExecuter.FirstOrDefaultAsync(query);
-            if (queryResult == null)
+            var author = await authorRepository.GetAsync(author => author.Id == authorId);
+            if (author is null)
             {
-                throw new EntityNotFoundException(typeof(Book), id);
+                throw new EntityNotFoundException(typeof(Author), authorId);
             }
 
-            var bookDto = ObjectMapper.Map<Book, BookDto>(queryResult.book);
-            bookDto.AuthorName = queryResult.author.FirstName + queryResult.author.LastName;
+            var entity = ObjectMapper.Map<CreateUpdateBookDto, Book>(book);
+            entity.AuthorId = authorId;
+            var result = await Repository.InsertAsync(entity);
+            var bookDto = ObjectMapper.Map<Book, BookDto>(result);
+            bookDto.AuthorName = author.GetFullName();
             return bookDto;
         }
 
-        public async override Task<PagedResultDto<BookDto>> GetListAsync(PagedAndSortedResultRequestDto input)
+        public async Task<BookDto> GetBookForAuthorAsync(Guid authorId, Guid bookId)
         {
-            await CheckGetListPolicyAsync();
-
-            var query = from book in Repository
-                        join author in authorRepository on book.AuthorId equals author.Id
-                        orderby input.Sorting
-                        select new { book, author };
-
-            query = query
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount);
-
-            var queryResult = await AsyncExecuter.ToListAsync(query);
-
-            var bookDtos = queryResult.Select(x =>
+            var author = await authorRepository.GetAsync(author => author.Id == authorId);
+            if (author is null)
             {
-                var bookDto = ObjectMapper.Map<Book, BookDto>(x.book);
-                bookDto.AuthorName = x.author.FirstName + x.author.LastName;
-                return bookDto;
-            }).ToList();
+                throw new EntityNotFoundException(typeof(Author), authorId);
+            }
+            var book = await Repository.GetAsync(book => book.Id == bookId && book.AuthorId == authorId);
+            if (book is null)
+            {
+                throw new EntityNotFoundException(typeof(Book), bookId);
+            }
 
-            var totalCount = await Repository.GetCountAsync();
+            var bookDto = ObjectMapper.Map<Book, BookDto>(book);
+            bookDto.AuthorName = author.GetFullName();
+            return bookDto;
+        }
 
-            return new PagedResultDto<BookDto>(
-                totalCount,
-                bookDtos
-            );
+        public async Task UpdateBookForAuthorAsync(Guid authorId, Guid bookId, CreateUpdateBookDto book)
+        {
+            var entity = await Repository.GetAsync(book => book.Id == bookId && book.AuthorId == authorId);
+            if (entity is null)
+            {
+                throw new EntityNotFoundException(typeof(Book), bookId);
+            }
+
+            ObjectMapper.Map(book, entity);
+
+            await Repository.UpdateAsync(entity);
         }
     }
 }

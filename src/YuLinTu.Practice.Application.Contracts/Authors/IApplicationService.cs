@@ -18,5 +18,7 @@ namespace YuLinTu.Practice.Authors
         Task UpdateAsync(Guid id, UpdateAuthorDto input);
 
         Task DeleteAsync(Guid id);
+
+        Task<bool> IsExistedAsync(Guid id);
     }
 }

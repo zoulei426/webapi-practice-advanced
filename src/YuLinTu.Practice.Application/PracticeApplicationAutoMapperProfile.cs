@@ -12,6 +12,7 @@ namespace YuLinTu.Practice
         {
             CreateMap<Book, BookDto>();
             CreateMap<CreateUpdateBookDto, Book>();
+            CreateMap<BookDto, CreateUpdateBookDto>();
 
             CreateMap<Author, AuthorDto>()
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.FirstName}{src.LastName}"))

@@ -34,6 +34,11 @@ using Volo.Abp.Swashbuckle;
 using Volo.Abp.VirtualFileSystem;
 using Volo.Abp.EntityFrameworkCore.PostgreSql;
 using Volo.Abp.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.Options;
+using YuLinTu.Practice.Filters;
 
 namespace YuLinTu.Practice
 {
@@ -61,75 +66,66 @@ namespace YuLinTu.Practice
             var hostingEnvironment = context.Services.GetHostingEnvironment();
             var configuration = context.Services.GetConfiguration();
 
-            Configure<AbpDbContextOptions>(options =>
+            ConfigureInputFormatters();
+            ConfigureDbContext();
+            ConfigureMultiTenancy();
+            ConfigureVirtualFileSystem(hostingEnvironment);
+            ConfigureSwaggerServices(context, configuration);
+            ConfigureLocalization();
+            ConfigureAuthentication(context, configuration);
+            ConfigureCache(configuration);
+            ConfigureRedis(context, configuration, hostingEnvironment);
+            ConfigureCors(context, configuration);
+            ConfigureApiResult();
+            //Configure<AbpAspNetCoreMvcOptions>(options =>
+            //{
+            //    options.ConventionalControllers.Create(typeof(PracticeApplicationModule).Assembly);
+            //});
+        }
+
+        private void ConfigureApiResult()
+        {
+            Configure<MvcOptions>(options =>
             {
-                //options.UseSqlServer();
-                options.UseNpgsql();
+                options.Filters.Add(typeof(ApiResultFilter));
             });
+        }
 
-            Configure<AbpMultiTenancyOptions>(options =>
+        private void ConfigureInputFormatters()
+        {
+            Configure<MvcOptions>(options =>
             {
-                options.IsEnabled = MultiTenancyConsts.IsEnabled;
+                options.InputFormatters.Insert(0, GetJsonPatchInputFormatter());
             });
+        }
 
-            if (hostingEnvironment.IsDevelopment())
+        private static NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter()
+        {
+            var builder = new ServiceCollection()
+                .AddLogging()
+                .AddMvc()
+                .AddNewtonsoftJson()
+                .Services.BuildServiceProvider();
+
+            return builder
+                .GetRequiredService<IOptions<MvcOptions>>()
+                .Value
+                .InputFormatters
+                .OfType<NewtonsoftJsonPatchInputFormatter>()
+                .First();
+        }
+
+        private void ConfigureJson()
+        {
+            Configure<MvcNewtonsoftJsonOptions>(options =>
             {
-                Configure<AbpVirtualFileSystemOptions>(options =>
-                {
-                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeDomainSharedModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Domain.Shared", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeDomainModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Domain", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeApplicationContractsModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Application.Contracts", Path.DirectorySeparatorChar)));
-                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeApplicationModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Application", Path.DirectorySeparatorChar)));
-                });
-            }
-
-            context.Services.AddAbpSwaggerGenWithOAuth(
-                configuration["AuthServer:Authority"],
-                new Dictionary<string, string>
-                {
-                    {"Practice", "Practice API"}
-                },
-                options =>
-                {
-                    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Practice API", Version = "v1" });
-                    options.DocInclusionPredicate((docName, description) => true);
-                    options.CustomSchemaIds(type => type.FullName);
-                });
-
-            Configure<AbpLocalizationOptions>(options =>
-            {
-                options.Languages.Add(new LanguageInfo("cs", "cs", "Čeština"));
-                options.Languages.Add(new LanguageInfo("en", "en", "English"));
-                options.Languages.Add(new LanguageInfo("fr", "fr", "Français"));
-                options.Languages.Add(new LanguageInfo("hu", "hu", "Magyar"));
-                options.Languages.Add(new LanguageInfo("pt-BR", "pt-BR", "Português"));
-                options.Languages.Add(new LanguageInfo("ru", "ru", "Русский"));
-                options.Languages.Add(new LanguageInfo("tr", "tr", "Türkçe"));
-                options.Languages.Add(new LanguageInfo("zh-Hans", "zh-Hans", "简体中文"));
-                options.Languages.Add(new LanguageInfo("zh-Hant", "zh-Hant", "繁體中文"));
+                options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                options.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
             });
+        }
 
-            context.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.Authority = configuration["AuthServer:Authority"];
-                    options.RequireHttpsMetadata = Convert.ToBoolean(configuration["AuthServer:RequireHttpsMetadata"]);
-                    options.Audience = "Practice";
-                });
-
-            Configure<AbpDistributedCacheOptions>(options =>
-            {
-                options.KeyPrefix = "Practice:";
-            });
-
-            if (!hostingEnvironment.IsDevelopment())
-            {
-                var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]);
-                context.Services
-                    .AddDataProtection()
-                    .PersistKeysToStackExchangeRedis(redis, "Practice-Protection-Keys");
-            }
-
+        private void ConfigureCors(ServiceConfigurationContext context, IConfiguration configuration)
+        {
             context.Services.AddCors(options =>
             {
                 options.AddPolicy(DefaultCorsPolicyName, builder =>
@@ -148,10 +144,98 @@ namespace YuLinTu.Practice
                         .AllowCredentials();
                 });
             });
+        }
 
-            Configure<AbpAspNetCoreMvcOptions>(options =>
+        private void ConfigureRedis(ServiceConfigurationContext context, IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
+        {
+            if (!hostingEnvironment.IsDevelopment())
             {
-                options.ConventionalControllers.Create(typeof(PracticeApplicationModule).Assembly);
+                var redis = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]);
+                context.Services
+                    .AddDataProtection()
+                    .PersistKeysToStackExchangeRedis(redis, "Practice-Protection-Keys");
+            }
+        }
+
+        private void ConfigureCache(IConfiguration configuration)
+        {
+            Configure<AbpDistributedCacheOptions>(options =>
+            {
+                options.KeyPrefix = "Practice:";
+            });
+        }
+
+        private void ConfigureAuthentication(ServiceConfigurationContext context, IConfiguration configuration)
+        {
+            context.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = configuration["AuthServer:Authority"];
+                    options.RequireHttpsMetadata = Convert.ToBoolean(configuration["AuthServer:RequireHttpsMetadata"]);
+                    options.Audience = "Practice";
+                });
+        }
+
+        private void ConfigureLocalization()
+        {
+            Configure<AbpLocalizationOptions>(options =>
+            {
+                options.Languages.Add(new LanguageInfo("cs", "cs", "Čeština"));
+                options.Languages.Add(new LanguageInfo("en", "en", "English"));
+                options.Languages.Add(new LanguageInfo("fr", "fr", "Français"));
+                options.Languages.Add(new LanguageInfo("hu", "hu", "Magyar"));
+                options.Languages.Add(new LanguageInfo("pt-BR", "pt-BR", "Português"));
+                options.Languages.Add(new LanguageInfo("ru", "ru", "Русский"));
+                options.Languages.Add(new LanguageInfo("tr", "tr", "Türkçe"));
+                options.Languages.Add(new LanguageInfo("zh-Hans", "zh-Hans", "简体中文"));
+                options.Languages.Add(new LanguageInfo("zh-Hant", "zh-Hant", "繁體中文"));
+            });
+        }
+
+        private void ConfigureSwaggerServices(ServiceConfigurationContext context, IConfiguration configuration)
+        {
+            context.Services.AddAbpSwaggerGenWithOAuth(
+                 configuration["AuthServer:Authority"],
+                 new Dictionary<string, string>
+                 {
+                    {"Practice", "Practice API"}
+                 },
+                 options =>
+                 {
+                     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Practice API", Version = "v1" });
+                     options.DocInclusionPredicate((docName, description) => true);
+                     options.CustomSchemaIds(type => type.FullName);
+                 });
+        }
+
+        private void ConfigureVirtualFileSystem(IWebHostEnvironment hostingEnvironment)
+        {
+            if (hostingEnvironment.IsDevelopment())
+            {
+                Configure<AbpVirtualFileSystemOptions>(options =>
+                {
+                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeDomainSharedModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Domain.Shared", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeDomainModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Domain", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeApplicationContractsModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Application.Contracts", Path.DirectorySeparatorChar)));
+                    options.FileSets.ReplaceEmbeddedByPhysical<PracticeApplicationModule>(Path.Combine(hostingEnvironment.ContentRootPath, string.Format("..{0}..{0}src{0}YuLinTu.Practice.Application", Path.DirectorySeparatorChar)));
+                });
+            }
+        }
+
+        private void ConfigureMultiTenancy()
+        {
+            Configure<AbpMultiTenancyOptions>(options =>
+            {
+                options.IsEnabled = MultiTenancyConsts.IsEnabled;
+            });
+        }
+
+        private void ConfigureDbContext()
+        {
+            Configure<AbpDbContextOptions>(options =>
+            {
+                //options.UseSqlServer();
+                options.UseNpgsql();
             });
         }
 

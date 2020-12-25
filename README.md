@@ -3,7 +3,7 @@
  * @Author: zoulei
  * @Date: 2020-12-18 13:26:04
  * @LastEditors: zoulei
- * @LastEditTime: 2020-12-24 09:51:14
+ * @LastEditTime: 2020-12-25 18:09:52
 -->
 
 # 基于 ABP vNext 的 Web API 进阶开发教程
@@ -32,8 +32,8 @@
   - [7 认证 / 授权](#7-认证--授权)
   - [8 缓存](#8-缓存)
   - [9 REST](#9-rest)
-    - [9.1 URI / 路由](#91-uri--路由)
-    - [9.2 HTTP 动词 / Action](#92-http-动词--action)
+    - [9.1 URI](#91-uri)
+    - [9.2 HTTP 动词](#92-http-动词)
     - [9.3 媒体类型 Media-Type](#93-媒体类型-media-type)
     - [9.4 HATEOAS](#94-hateoas)
   - [参考文献](#参考文献)
@@ -669,144 +669,7 @@ namespace YuLinTu.Practice.Books
 }
 ```
 
-创建 CreateUpdateBookDto：
-
-```c#
-using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace YuLinTu.Practice.Books
-{
-    public class CreateUpdateBookDto
-    {
-        [Required]
-        public Guid AuthorId { get; set; }
-
-        [Required]
-        [StringLength(128)]
-        public string Name { get; set; }
-
-        [Required]
-        public BookType Type { get; set; } = BookType.Undefined;
-
-        [Required]
-        [DataType(DataType.Date)]
-        public DateTime PublishDate { get; set; } = DateTime.Now;
-
-        [Required]
-        public float Price { get; set; }
-    }
-}
-```
-
-创建 IBookAppService：
-
-```c#
-using System;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.Application.Services;
-
-namespace YuLinTu.Practice.Books
-{
-    public interface IBookAppService :
-          ICrudAppService<
-              BookDto,
-              Guid,
-              PagedAndSortedResultRequestDto,
-              CreateUpdateBookDto>
-    {
-    }
-}
-```
-
-创建 BookAppService 实现 IBookAppService，并重写读取数据的方法：
-
-```c#
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.Application.Services;
-using Volo.Abp.Domain.Entities;
-using Volo.Abp.Domain.Repositories;
-using YuLinTu.Practice.Authors;
-
-namespace YuLinTu.Practice.Books
-{
-    public class BookAppService :
-         CrudAppService<
-             Book,
-             BookDto,
-             Guid,
-             PagedAndSortedResultRequestDto,
-             CreateUpdateBookDto>,
-         IBookAppService
-    {
-        private readonly IAuthorRepository authorRepository;
-
-        public BookAppService(IRepository<Book, Guid> repository, IAuthorRepository authorRepository)
-            : base(repository)
-        {
-            this.authorRepository = authorRepository;
-        }
-
-        public async override Task<BookDto> GetAsync(Guid id)
-        {
-            await CheckGetPolicyAsync();
-
-            var query = from book in Repository
-                        join author in authorRepository on book.AuthorId equals author.Id
-                        where book.Id == id
-                        select new { book, author };
-
-            // 获取 book 和 author
-            var queryResult = await AsyncExecuter.FirstOrDefaultAsync(query);
-            if (queryResult == null)
-            {
-                throw new EntityNotFoundException(typeof(Book), id);
-            }
-
-            var bookDto = ObjectMapper.Map<Book, BookDto>(queryResult.book);
-            bookDto.AuthorName = queryResult.author.FirstName + queryResult.author.LastName;
-            return bookDto;
-        }
-
-        public async override Task<PagedResultDto<BookDto>> GetListAsync(PagedAndSortedResultRequestDto input)
-        {
-            await CheckGetListPolicyAsync();
-
-            var query = from book in Repository
-                        join author in authorRepository on book.AuthorId equals author.Id
-                        orderby input.Sorting
-                        select new { book, author };
-
-            query = query
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount);
-
-            var queryResult = await AsyncExecuter.ToListAsync(query);
-
-            var bookDtos = queryResult.Select(x =>
-            {
-                var bookDto = ObjectMapper.Map<Book, BookDto>(x.book);
-                bookDto.AuthorName = x.author.FirstName + x.author.LastName;
-                return bookDto;
-            }).ToList();
-
-            var totalCount = await Repository.GetCountAsync();
-
-            return new PagedResultDto<BookDto>(
-                totalCount,
-                bookDtos
-            );
-        }
-    }
-}
-```
-
-创建 AuthorDto：
+按照上一教程创建 CreateUpdateBookDto, IBookAppService, BookAppService。
 
 ```c#
 using System;
@@ -1062,7 +925,119 @@ namespace YuLinTu.Practice
 
 ### 4.4 控制器层
 
+取消从应用层自动生成API的功能，修改 YuLinTu.Practice.HttpApi.Host 项目中的 PracticeHttpApiHostModule.cs 文件，注释以下代码：
+
+```c#
+ //Configure<AbpAspNetCoreMvcOptions>(options =>
+//{
+//    options.ConventionalControllers.Create(typeo(PracticeApplicationModule).Assembly);
+//});
+```
+
+在 YuLinTu.Practice.HttpApi 项目中创建 BookController：
+
+```c#
+using Microsoft.AspNetCore.Mvc;
+using Volo.Abp;
+using YuLinTu.Practice.Authors;
+
+namespace YuLinTu.Practice.Books
+{
+    [RemoteService]
+    [Route("api/practice/authors/{authorId}/books")]
+    public class BookController : PracticeController
+    {
+        private readonly IBookAppService bookAppService;
+        private readonly IAuthorAppService authorAppService;
+
+        public BookController(IBookAppService bookAppService, IAuthorAppService authorAppService)
+        {
+            Check.NotNull(bookAppService, nameof(bookAppService));
+            Check.NotNull(authorAppService, nameof(authorAppService));
+
+            this.bookAppService = bookAppService;
+            this.authorAppService = authorAppService;
+        }
+    }
+}
+```
+
+- 由于在本教程中 Author 和 Book 实体之间是 1 到 N 的关系，所以在 Route 属性中的路由配置为 authors/{authorId}/books，这样更能体现 Author 与 Book 资源的关系。当然也可以将接口设计为 api/practice/books，当根据实际团队的约定而决定。
+- Route 路由中的 authors, books 是复数形式，当然也可以是单数形式，同样根据实际的约定或习惯而决定。
+- 在 Book 控制器中可能会使用 Author, Book 的服务，因此在构造函数中注入了 IBookAppService, IAuthorAppService 服务，同时使用 Check 进行参数检查。
+
+在 BookController 中添加 GetBookForAuthor 方法：
+
+```c#
+[HttpGet("{bookId}")]
+public async Task<IActionResult> GetBookForAuthor(Guid authorId, Guid bookId)
+{
+    if (!await authorAppService.IsExistedAsync(authorId))
+        return NotFound();
+    var result = await bookAppService.GetBookForAuthorAsync(authorId, bookId);
+    return Ok(result);
+}
+```
+
+- 此方法使用 GET 方法，并配置路由 bookId，这样访问此方法的完整路由就是 api/practice/authors/{authorId}/books/{bookId}。
+- NotFound, Ok 方法将分别返回 404, 200 的状态码。
+- IsExistedAsync 方法根据 authorId 判断 Author 是否存在，GetBookForAuthorAsync 方法根据 authorId, bookId 返回 BookDto，具体实现请查阅源代码。
+
+在 BookController 中添加 CreateBookForAuthor 方法：
+
+```c#
+[HttpPost]
+public async Task<IActionResult> CreateBookForAuthor(Guid authorId,CreateUpdateBookDto book)
+{
+    if (!await authorAppService.IsExistedAsync(authorId))
+        return NotFound();
+    var result = await bookAppService.CreateBookForAuthorAsync(authorId, book);
+    return Ok(result);
+}
+```
+
 ## 5 响应结果封装
+
+在 YuLinTu.Practice.HttpApi.Host 项目中创建过滤器 ApiResultFilter：
+
+```c#
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace YuLinTu.Practice.Filters
+{
+    public class ApiResultFilter : ActionFilterAttribute
+    {
+        public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            if (context.Exception is null)
+            {
+                var result = context.Result as ObjectResult;
+                if (result is not null)
+                {
+                    // 封装结果
+                    var apiResult = new ApiResult<object>();
+                    apiResult.Success(result.Value);
+                    context.Result = new ObjectResult(apiResult);
+                }
+            }
+            base.OnActionExecuted(context);
+        }
+    }
+}
+```
+
+在 PracticeHttpApiHostModule 中配置 ApiResultFilter 过滤器：
+
+```c#
+Configure<MvcOptions>(options =>
+{
+    options.Filters.Add(typeof(ApiResultFilter));
+});
+```
+
+- ApiResult 的实现请参考源代码或根据实际业务需求而定。
+- ApiResultFilter 的使用可以全局配置，也可以在各个 Controller 上通过添加 [ApiResult] 属性达到更颗粒化的控制。
 
 ## 6 参数验证
 
@@ -1072,9 +1047,88 @@ namespace YuLinTu.Practice
 
 ## 9 REST
 
-### 9.1 URI / 路由
+### 9.1 URI
 
-### 9.2 HTTP 动词 / Action
+### 9.2 HTTP 动词
+
+- RESTFul API 中的幂等性是指调用某个方法 1 次或 N 次对资源产生的影响结果都是相同的。
+- 接口符合幂等性可以降低系统实现的复杂性，并能保证资源状态的一致性。
+
+> HTTP 方法 | 是否幂等 | 是否安全
+> :-: | :-: | :-:
+> OPTIONS | Y | Y
+> HEAD | Y | Y
+> GET | Y | Y
+> PUT | Y | N
+> DELETE | Y | N
+> POST | N | N
+> PATCH | N | N
+
+使用 PUT 更新 Book，在 BookController 中添加 UpdateBookForAuthor 方法：
+
+```c#
+[HttpPut("{bookId}")]
+public async Task<IActionResult> UpdateBookForAuthor(Guid authorId,Guid bookId, CreateUpdateBookDto book)
+{
+    if (!await authorAppService.IsExistedAsync(authorId))
+        return NotFound();
+    await bookAppService.UpdateBookForAuthorAsync(authorId, bookId, book);
+    return NoContent();
+}
+```
+
+使用 Patch 局部更新 Book，在 BookController 中添加 PartiallyUpdateBookForAuthor 方法：
+
+```c#
+[HttpPatch("{bookId}")]
+public async Task<IActionResult> PartiallyUpdateBookForAuthor(
+    Guid authorId,
+    Guid bookId,
+    JsonPatchDocument<CreateUpdateBookDto> patchDocument)
+{
+    if (!await authorAppService.IsExistedAsync(authorId))
+        return NotFound();
+    var bookDto = await bookAppService.GetBookForAuthorAsync(authorId, bookId);
+    var dtoToPatch = ObjectMapper.Map<BookDto, CreateUpdateBookDto>(bookDto);
+    patchDocument.ApplyTo(dtoToPatch, ModelState);
+    await bookAppService.UpdateBookForAuthorAsync(authorId, bookId, dtoToPatch);
+    return NoContent();
+}
+```
+
+在 PracticeHttpApiHostModule.cs 文件中增加 application/json-patch+json 媒体类型配置：
+
+```c#
+public override void ConfigureServices(ServiceConfigurationContext context)
+{
+    ConfigureInputFormatters();
+    // ...
+}
+private void ConfigureInputFormatters()
+{
+    Configure<MvcOptions>(options =>
+    {
+        options.InputFormatters.Insert(0, GetJsonPatchInputFormatter());
+    });
+}
+private static NewtonsoftJsonPatchInputFormatterGetJsonPatchInputFormatter()
+{
+    var builder = new ServiceCollection()
+        .AddLogging()
+        .AddMvc()
+        .AddNewtonsoftJson()
+        .Services.BuildServiceProvider();
+    return builder
+        .GetRequiredService<IOptions<MvcOptions>>()
+        .Value
+        .InputFormatters
+        .OfType<NewtonsoftJsonPatchInputFormatter>()
+        .First();
+}
+```
+
+- 更多 Patch 的内容请查阅[处理 JSON Patch 请求](https://docs.microsoft.com/zh-cn/aspnet/core/web-api/jsonpatch?view=aspnetcore-5.0)。
+
 
 ### 9.3 媒体类型 Media-Type
 

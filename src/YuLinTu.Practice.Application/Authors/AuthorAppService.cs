@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Domain.Repositories;
 
 namespace YuLinTu.Practice.Authors
 {
@@ -68,6 +69,11 @@ namespace YuLinTu.Practice.Authors
                 totalCount,
                 ObjectMapper.Map<List<Author>, List<AuthorDto>>(authors)
             );
+        }
+
+        public async Task<bool> IsExistedAsync(Guid id)
+        {
+            return await authorRepository.AnyAsync(author => author.Id == id);
         }
 
         public async Task UpdateAsync(Guid id, UpdateAuthorDto input)
